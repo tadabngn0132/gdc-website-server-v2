@@ -11,3 +11,279 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id                    Int               @id @default(autoincrement())
+  fullName              String            @map("full_name")
+  email                 String            @unique @map("email")
+  password              String            @map("password")
+  phoneNumber           String            @map("phone_number")
+  role                  UserRole          @default(ADMIN) @map("role")
+  avatarUrl             String?           @map("avatar_url")
+  avatarPublicId        String?           @map("avatar_public_id")
+  isActive              Boolean           @default(true) @map("is_active")
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  userGoogleCredential  UserGoogleCredential?
+  refreshTokens         RefreshToken[]
+  resetPasswordTokens   ResetPasswordToken[]
+  activities            Activity[]
+  aiKnowledge           AIKnowledge[]
+  publicWebsiteContents PublicWebsiteContent[]
+  chatMessages           ChatMessage[]
+  products               Product[]
+}
+
+model UserGoogleCredential {
+  id                          Int               @id @default(autoincrement())
+  userId                      Int               @unique @map("user_id")
+  googleId                    String            @unique @map("google_id")
+  encryptedRefreshToken       String            @map("encrypted_refresh_token")
+  encryptedAccessToken        String            @map("encrypted_access_token")
+  expiresAt                   DateTime          @map("expiry_date")
+  revokedAt                   DateTime?         @map("revoked_at")
+  createdAt                   DateTime          @default(now())
+  updatedAt                   DateTime          @updatedAt
+
+  user                        User              @relation(fields: [userId], references: [id])
+}
+
+model RefreshToken {
+  id                        Int               @id @default(autoincrement())
+  userId                    Int               @map("user_id")
+  encryptedToken            String            @map("token")
+  expiresAt                 DateTime          @map("expires_at")
+  usedAt                    DateTime?         @map("used_at")
+  revokedAt                 DateTime?         @map("revoked_at")
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+
+  user                      User              @relation(fields: [userId], references: [id])
+}
+
+model ResetPasswordToken {
+  id                        Int               @id @default(autoincrement())
+  userId                    Int               @map("user_id")
+  encryptedToken            String            @map("token")
+  expiresAt                 DateTime          @map("expires_at")
+  usedAt                    DateTime?         @map("used_at")
+  revokedAt                 DateTime?         @map("revoked_at")
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+
+  user                      User              @relation(fields: [userId], references: [id])
+}
+
+model Activity {
+  id                            Int               @id @default(autoincrement())
+  createdBy                     Int               @map("created_by")
+  title                         String            @map("title")
+  description                   String?           @map("description")
+  date                          DateTime          @map("date")
+  status                        String            @map("status")
+  thumbnailUrl                  String?           @map("thumbnail_url")
+  thumbnailPublicId             String?           @map("thumbnail_public_id")
+  isFeatured                    Boolean           @default(false) @map("is_featured")
+  isRequireRegistration         Boolean           @default(false) @map("is_require_registration")
+  maxParticipants               Int?              @map("max_participants")
+  registrationDeadline          DateTime?         @map("registration_deadline")
+  venueName                     String?           @map("venue_name")
+  createdAt                     DateTime          @default(now())
+  updatedAt                     DateTime          @updatedAt
+
+  user                          User              @relation(fields: [createdBy], references: [id])
+  ticketOrders                  ActivityTicketOrder[]
+}
+
+model ActivityTicketOrder {
+  id                                Int               @id @default(autoincrement())
+  activityId                        Int               @map("activity_id")
+  fullName                          String            @map("full_name")
+  email                             String            @map("email")
+  phoneNumber                       String            @map("phone_number")
+  fptStudentId                      String?           @map("fpt_student_id")
+  quantity                          Int               @map("quantity")
+  totalPrice                        Float             @map("total_price")
+  bankTranferReceiptImageUrl        String?           @map("bank_transfer_receipt_image_url")
+  bankTranferReceiptImagePublicId   String?           @map("bank_transfer_receipt_image_public_id")
+  status                            String            @map("status")
+  isCheckedIn                       Boolean           @default(false) @map("is_checked_in")
+  createdAt                         DateTime          @default(now())
+  updatedAt                         DateTime          @updatedAt
+
+  activity                          Activity          @relation(fields: [activityId], references: [id])
+}
+
+model AIKnowledge {
+  id                                Int               @id @default(autoincrement())
+  question                          String            @map("question")
+  answer                            String?           @map("answer")
+  category                          String            @map("category")
+  createdAt                         DateTime          @default(now())
+  updatedAt                         DateTime          @updatedAt
+  createdBy                         Int?              @map("created_by")
+
+  user                              User?             @relation(fields: [createdBy], references: [id])
+}
+
+model PublicWebsiteContent {
+  id                                Int               @id @default(autoincrement())
+  page                              String            @map("page")
+  sectionName                       String            @map("section_name")
+  sectionType                       String            @map("section_type")
+  title                             String?           @map("title")
+  subtitle                          String?           @map("subtitle")
+  content                           String?           @map("content")
+  imageUrl                          String?           @map("image_url")
+  imagePublicId                     String?           @map("image_public_id")
+  buttonText                       String?           @map("button_text")
+  buttonLink                       String?           @map("button_link")
+  displayOrder                       Int               @map("display_order")
+  status                            String            @map("status")
+  createdAt                         DateTime          @default(now())
+  updatedAt                         DateTime          @updatedAt
+  createdBy                         Int?              @map("created_by")
+
+  user                              User?             @relation(fields: [createdBy], references: [id])
+}
+
+model ChatMessage {
+  id                                Int               @id @default(autoincrement())
+  senderId                          Int               @map("sender_id")
+  conversationId                    Int               @map("conversation_id")
+  message                           String            @map("message")
+  senderType                        String            @map("sender_type")
+  isRead                            Boolean           @default(false) @map("is_read")
+  createdAt                         DateTime          @default(now())
+  updatedAt                         DateTime          @updatedAt
+
+  sender                            User              @relation(fields: [senderId], references: [id])
+  conversation                      ChatConversation  @relation(fields: [conversationId], references: [id])
+}
+
+model ChatConversation {
+  id                                Int               @id @default(autoincrement())
+  guestName                         String?           @map("guest_name")
+  guestEmail                        String?           @map("guest_email")
+  createdAt                         DateTime          @default(now())
+  updatedAt                         DateTime          @updatedAt
+  messages                          ChatMessage[]
+}
+
+model Member {
+  id                                Int               @id @default(autoincrement())
+  fullName                          String            @map("full_name")
+  email                             String            @unique @map("email")
+  dateOfBirth                       DateTime          @map("date_of_birth")
+  phoneNumber                       String            @map("phone_number")
+  studentId                         String?           @map("student_id")
+  major                             String?           @map("major")
+  portraitImageUrl                  String?           @map("portrait_image_url")
+  portraitImagePublicId             String?           @map("portrait_image_public_id")
+  positionId                        Int?              @map("position_id")
+
+  position                          Position?         @relation(fields: [positionId], references: [id])
+}
+
+model Position {
+  id                                Int               @id @default(autoincrement())
+  name                              String            @map("name")
+  description                       String?           @map("description")
+  departmentId                      Int?              @map("department_id")
+
+  department                        Department?       @relation(fields: [departmentId], references: [id])
+  members                           Member[]
+}
+
+model Department {
+  id                                Int               @id @default(autoincrement())
+  name                              String            @map("name")
+  description                       String?           @map("description")
+
+  positions                         Position[]
+}
+
+model Product {
+  id                                Int               @id @default(autoincrement())
+  name                              String            @map("name")
+  slug                              String            @unique @map("slug")
+  description                       String?           @map("description")
+  price                             Float             @map("price")
+  stock                             Int               @map("stock")
+  material                          String?           @map("material")
+  sizes                             String[]          @map("sizes")
+  colors                            String[]          @map("colors")
+  imageUrl                          String?           @map("image_url")
+  imagePublicId                     String?           @map("image_public_id")
+  createdAt                         DateTime          @default(now())
+  updatedAt                         DateTime          @updatedAt
+  createdBy                         Int?              @map("created_by")
+
+  user                              User?             @relation(fields: [createdBy], references: [id])
+  productImages                     ProductImage[]
+  cartItems                         CartItem[]
+  orderItems                        OrderItem[]
+}
+
+model ProductImage {
+  id                                Int               @id @default(autoincrement())
+  productId                         Int               @map("product_id")
+  imageUrl                          String            @map("image_url")
+  imagePublicId                     String            @map("image_public_id")
+  createdAt                         DateTime          @default(now())
+
+  product                           Product           @relation(fields: [productId], references: [id])
+}
+
+model CartItem {
+  id                                Int               @id @default(autoincrement())
+  cartId                            Int               @map("cart_id")
+  productId                         Int               @map("product_id")
+  quantity                          Int               @map("quantity")
+  createdAt                         DateTime          @default(now())
+  updatedAt                         DateTime          @updatedAt
+
+  product                           Product           @relation(fields: [productId], references: [id])
+  cart                              Cart           @relation(fields: [cartId], references: [id])
+}
+
+model Cart {
+  id                                Int               @id @default(autoincrement())
+  sessionId                         Int               @map("session_id")
+  createdAt                         DateTime          @default(now())
+
+  items                             CartItem[]
+}
+
+model OrderItem {
+  id                                Int               @id @default(autoincrement())
+  orderId                           Int               @map("order_id")
+  productId                         Int               @map("product_id")
+  quantity                          Int               @map("quantity")
+  price                             Float             @map("price")
+
+  product                           Product           @relation(fields: [productId], references: [id])
+  order                             Order             @relation(fields: [orderId], references: [id])
+}
+
+model Order {
+  id                                Int               @id @default(autoincrement())
+  fullName                          String            @map("full_name")
+  email                             String            @map("email")
+  phoneNumber                       String            @map("phone_number")
+  provinceOrCity                    String            @map("province_or_city")
+  communeOrWard                     String            @map("commune_or_ward")
+  specificAddress                   String            @map("specific_address")
+  notes                             String?           @map("notes")
+  bankTranferReceiptImageUrl        String?           @map("bank_transfer_receipt_image_url")
+  bankTranferReceiptImagePublicId   String?           @map("bank_transfer_receipt_image_public_id")
+  totalPrice                        Float             @map("total_price")
+  status                            String            @map("status")
+  createdAt                         DateTime          @default(now())
+
+  items                             OrderItem[]
+}
+
+enum UserRole {
+  ADMIN
+}
